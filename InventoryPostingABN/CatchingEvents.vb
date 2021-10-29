@@ -251,6 +251,26 @@
                                             oIPBN.Quantity = CountQty
                                             oIPBN.BaseLineNumber = LineNum
 
+                                        Else
+
+                                            stQueryH2 = "Select Top 1 ""BatchNum"" from OIBT where ""ItemCode""='" & ItemCode & "' AND ""WhsCode""='001' AND ""Direction""=0 order by ""CreateDate"" desc"
+                                            oRecSetH2.DoQuery(stQueryH2)
+
+                                            If oRecSetH2.RecordCount > 0 Then
+
+                                                oRecSetH2.MoveFirst()
+
+                                                oIPBNS = oIPL.InventoryPostingBatchNumbers
+                                                oIPBN = oIPBNS.Add()
+
+                                                BatchNumber = oRecSetH2.Fields.Item("BatchNum").Value
+
+                                                oIPBN.BatchNumber = BatchNumber
+                                                oIPBN.Quantity = CountQty
+                                                oIPBN.BaseLineNumber = LineNum
+
+                                            End If
+
                                         End If
 
                                     Else
