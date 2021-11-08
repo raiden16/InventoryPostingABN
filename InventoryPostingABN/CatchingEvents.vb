@@ -171,7 +171,7 @@
     '// CONTROLADOR DE EVENTOS FORMA Recuento de Inventario
     '//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     Private Sub frmOVPMControllerAfter(ByVal FormUID As String, ByVal pVal As SAPbouiCOM.ItemEvent)
-        Dim DocEntry, ObjType, LineNum, ItemCode, WhsCode, BatchNumber As String
+        Dim DocEntry, ObjType, LineNum, ItemCode, WhsCode, BatchNumber, Lote As String
         Dim CountQty, InWhsQty, Difference As Double
         Dim stQueryH1, stQueryH2 As String
         Dim oRecSetH1, oRecSetH2 As SAPbobsCOM.Recordset
@@ -204,7 +204,7 @@
 
                         Case 1470000001
 
-                            stQueryH1 = "Select T1.""DocEntry"",T0.""ObjType"",T1.""LineNum"",T1.""ItemCode"",T1.""WhsCode"",T1.""CountQty"",T1.""InWhsQty"",T1.""Difference"" from OINC T0 Inner Join INC1 T1 on T1.""DocEntry""=T0.""DocEntry"" where T0.""DocNum""=" & DocNum
+                            stQueryH1 = "Select T1.""DocEntry"",T0.""ObjType"",T1.""LineNum"",T1.""ItemCode"",T1.""WhsCode"",T1.""CountQty"",T1.""InWhsQty"",T1.""Difference"",T2.""ManBtchNum"" from OINC T0 Inner Join INC1 T1 on T1.""DocEntry""=T0.""DocEntry"" Inner Join OITM T2 on T2.""ItemCode""=T1.""ItemCode"" where T0.""DocNum""=" & DocNum
                             oRecSetH1.DoQuery(stQueryH1)
 
                             If oRecSetH1.RecordCount > 0 Then
@@ -222,6 +222,7 @@
                                     CountQty = oRecSetH1.Fields.Item("CountQty").Value
                                     InWhsQty = oRecSetH1.Fields.Item("InWhsQty").Value
                                     Difference = oRecSetH1.Fields.Item("Difference").Value
+                                    Lote = oRecSetH1.Fields.Item("ManBtchNum").Value
 
                                     oIPL = oIPLS.Add()
                                     oIPL.BaseEntry = DocEntry
@@ -233,7 +234,7 @@
                                     oIPL.CountedQuantity = CountQty
                                     'oIPL.InWarehouseQuantity = Difference
 
-                                    If Difference > 0 Then
+                                    If Difference > 0 And Lote = "Y" Then
 
                                         stQueryH2 = "Select Top 1 ""BatchNum"" from OIBT where ""ItemCode""='" & ItemCode & "' AND ""WhsCode""='" & WhsCode & "' AND ""Direction""=0 order by ""CreateDate"" desc"
                                         oRecSetH2.DoQuery(stQueryH2)
@@ -273,7 +274,7 @@
 
                                         End If
 
-                                    Else
+                                    ElseIf Difference < 0 And Lote = "Y" Then
 
                                         stQueryH2 = "Select T0.*,T1.""CreateDate"" from
                                                     (Select ""BatchNum"",""ItemCode"",""WhsCode"",
