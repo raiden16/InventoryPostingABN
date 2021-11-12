@@ -5,7 +5,7 @@
     Friend SBOCompany As SAPbobsCOM.Company '//OBJETO COMPAÑIA
     Friend csDirectory As String '//DIRECTORIO DONDE SE ENCUENTRAN LOS .SRF
     Dim DocNum As String
-
+    Dim conexionSQL As Sap.Data.Hana.HanaConnection
 
     Public Sub New()
 
@@ -184,6 +184,10 @@
         Dim oIPBN As SAPbobsCOM.InventoryPostingBatchNumber
         Dim oIPP As SAPbobsCOM.InventoryPostingParams
         Dim CantidadR, CantidadL As Double
+        Dim tabla As DataTable
+        Dim comm As New Sap.Data.Hana.HanaCommand
+        Dim DA As New Sap.Data.Hana.HanaDataAdapter
+        Dim ds As New DataSet
 
         oRecSetH1 = SBOCompany.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
         oRecSetH2 = SBOCompany.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset)
@@ -204,15 +208,24 @@
 
                         Case 1470000001
 
-                            stQueryH1 = "Select T1.""DocEntry"",T0.""ObjType"",T1.""LineNum"",T1.""ItemCode"",T1.""WhsCode"",T1.""CountQty"",T1.""InWhsQty"",T1.""Difference"",T2.""ManBtchNum"" from OINC T0 Inner Join INC1 T1 on T1.""DocEntry""=T0.""DocEntry"" Inner Join OITM T2 on T2.""ItemCode""=T1.""ItemCode"" where T0.""DocNum""=" & DocNum
+                            conectar()
+
+                            stQueryH1 = "Select T1.""DocEntry"",T0.""ObjType"",T1.""LineNum"",T1.""ItemCode"",T1.""WhsCode"",T1.""CountQty"",T1.""InWhsQty"",T1.""Difference"",T2.""ManBtchNum"" from """ & SBOCompany.CompanyDB & """.OINC T0 Inner Join """ & SBOCompany.CompanyDB & """.INC1 T1 on T1.""DocEntry""=T0.""DocEntry"" Inner Join """ & SBOCompany.CompanyDB & """.OITM T2 on T2.""ItemCode""=T1.""ItemCode"" where T0.""DocNum""=" & DocNum
                             oRecSetH1.DoQuery(stQueryH1)
+                            comm.CommandText = stQueryH1
+                            comm.Connection = conexionSQL
+                            DA.SelectCommand = comm
+                            DA.Fill(ds)
 
                             If oRecSetH1.RecordCount > 0 Then
+
+                                tabla = ds.Tables(0)
 
                                 oIP.CountDate = DateTime.Now
                                 oRecSetH1.MoveFirst()
 
-                                For i = 0 To oRecSetH1.RecordCount - 1
+                                For Each i As DataRow In tabla.Rows
+                                    'i = 0 To oRecSetH1.RecordCount - 1
 
                                     DocEntry = oRecSetH1.Fields.Item("DocEntry").Value
                                     ObjType = oRecSetH1.Fields.Item("ObjType").Value
@@ -339,6 +352,8 @@
                                 oIPP = oIPS.Add(oIP)
                                 SBOApplication.MessageBox("Se creo con exito la contabilización de stocks.")
 
+                                conexionSQL.Close()
+
                             End If
 
                     End Select
@@ -347,10 +362,36 @@
 
         Catch ex As Exception
             SBOApplication.MessageBox("Error en el evento sobre Forma Recuento de Inventario. " & ex.Message)
+            conexionSQL.Close()
         Finally
             'oPO = Nothing
         End Try
     End Sub
+
+
+    Public Function conectar() As Boolean
+        Dim stCadenaConexion As String
+        Try
+
+            conectar = False
+
+            ''---- Cargamos datos de archivo de configuracion
+
+            '---- objeto compañia
+            conexionSQL = New Sap.Data.Hana.HanaConnection
+
+            '---- armamos cadena de conexion
+            stCadenaConexion = "DRIVER={B1CRHPROXY32};UID=" & My.Settings.UserSQL & ";PWD=" & My.Settings.PassSQL & ";SERVERNODE=" & My.Settings.Server
+
+            '---- realizamos conexion
+            conexionSQL = New Sap.Data.Hana.HanaConnection(stCadenaConexion)
+
+            conexionSQL.Open()
+
+        Catch ex As Exception
+            SBOApplication.MessageBox("Error al conectar con HANA . " & ex.Message)
+        End Try
+    End Function
 
 
 End Class

@@ -53,6 +53,42 @@ Namespace My
                 Return defaultInstance
             End Get
         End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("192.168.10.10:30015")>  _
+        Public Property Server() As String
+            Get
+                Return CType(Me("Server"),String)
+            End Get
+            Set
+                Me("Server") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("SYSTEM")>  _
+        Public Property UserSQL() As String
+            Get
+                Return CType(Me("UserSQL"),String)
+            End Get
+            Set
+                Me("UserSQL") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("Tekno2020.*")>  _
+        Public Property PassSQL() As String
+            Get
+                Return CType(Me("PassSQL"),String)
+            End Get
+            Set
+                Me("PassSQL") = value
+            End Set
+        End Property
     End Class
 End Namespace
 
